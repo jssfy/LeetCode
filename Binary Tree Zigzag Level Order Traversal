@@ -1,0 +1,142 @@
+// https://oj.leetcode.com/problems/binary-tree-zigzag-level-order-traversal/
+// anye, 10/17/2014
+
+#include <iostream>
+#include <stack>
+#include <queue>
+#include <vector>
+using namespace std;
+
+/**
+ * Definition for binary tree
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+
+ typedef struct  TreeNode
+ {
+     int val;
+     TreeNode *left;
+     TreeNode *right;
+     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ }TreeNode;
+ // using a queue to normally do BFS, and add a corresponding flag to indicate whether the node should be traversed in reverse order
+ // set reverse to true if yes
+ // the elements popped out of queue will be stored in a stack until reaching the last node in the same level of tree
+typedef struct ZigzagNode
+ {
+    TreeNode node;
+    bool reverse;
+    ZigzagNode(TreeNode iNode, bool iReverse):node(iNode), reverse(iReverse){}
+ }ZigzagNode;
+
+class Solution {
+public:
+    vector<vector<int> > zigzagLevelOrder(TreeNode *root) {
+        queue<ZigzagNode> q;
+        stack<ZigzagNode> s;
+        vector<vector<int> > ret;
+        if(root == NULL)
+        {
+            return ret;
+        }
+        q.push(ZigzagNode(*root, false));
+        bool lPreviousFlag = false;
+        int index = 0;
+        // push the 1st vec for root
+        vector<int> vec;
+        ret.push_back(vec);
+
+        while(!q.empty())
+        {
+            ZigzagNode temp = q.front();
+            q.pop();
+
+            // push children to queue for BFS
+            if(temp.node.left)
+            {
+                q.push(ZigzagNode(*temp.node.left, !temp.reverse));
+            }
+            if(temp.node.right)
+            {
+                q.push(ZigzagNode(*temp.node.right, !temp.reverse));
+            }
+
+            // if order need to be changed
+            if(temp.reverse != lPreviousFlag)
+            {
+                ret.push_back(vector<int>());
+
+                if(temp.reverse == false)
+                {
+                    // dump previous nodes in stack
+                    while(!s.empty())
+                    {
+                        ret[index].push_back(s.top().node.val); 
+                        s.pop();
+                    }
+
+                    ++index;
+                    // dump current node
+                    ret[index].push_back(temp.node.val);
+
+                }
+                else
+                {
+                    ++index;
+                    // the current node should be dumped in reverse order, push to stack
+                    s.push(temp);
+                }
+                // modify lPreviousFlag
+                lPreviousFlag = temp.reverse;
+            }
+            else
+            {
+                if(temp.reverse == false)
+                {
+                    // dump current node
+                    ret[index].push_back(temp.node.val);
+                }
+                else
+                {
+                    // the current node should be dumped in reverse order, push to stack
+                    s.push(temp);
+                }
+            }
+        }
+        // dump the last row
+        if(lPreviousFlag == true)
+        {            
+            while(!s.empty())
+            {
+                ret[ret.size()-1].push_back(s.top().node.val); 
+                s.pop();
+            }
+        }
+        return ret;
+    }
+};
+
+int main()
+{
+    TreeNode left(2);
+    TreeNode root(1);
+    root.left = &left;
+    Solution solution;
+    vector<vector<int> > ret = solution.zigzagLevelOrder(&root);
+    for(int i = 0; i<ret.size(); ++i)
+    {
+        vector<int> vec = ret[i];
+        for(int j = 0; j<vec.size(); ++j)
+        {
+            std::cout << vec[j] << ',';
+        }
+        std::cout << std::endl;
+    }
+
+    return 0;
+}
